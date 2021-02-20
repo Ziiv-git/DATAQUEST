@@ -1,0 +1,72 @@
+import pandas as pd
+subs = pd.read_csv('muscle_labs.csv', parse_dates=['end_date', 'start_date'])
+# subs.head()
+year = subs['end_date'].dt.year
+month = subs['end_date'].dt.month
+subs['churn_month'] = 100*year + month
+# subs.info()
+# Find the number of churned customers per month:
+# Group by churn_month and count the number of rows.
+churn = subs.groupby('churn_month').size()
+# print(churn)
+monthly_churn = pd.DataFrame({'total_churned': churn})
+print(monthly_churn)
+
+
+years = list(range(2011,2015))
+months = list(range(1,13))
+yearmonths = [y*100+m for y in years for m in months]
+print(yearmonths)
+
+
+yearmonths = yearmonths[:-1]
+churn = pd.DataFrame({"yearmonth": yearmonths})
+churn.head()
+
+
+years = list(range(2011,2015))
+months = list(range(1,13))
+yearmonths = [y*100+m for y in years for m in months]
+yearmonths = yearmonths[:-1]
+
+churn = pd.DataFrame({"yearmonth": yearmonths})
+
+churn = pd.merge(churn, monthly_churn, 'left', left_on='yearmonth', right_index=True) #merge the two datafeames
+churn.head()
+churn.fillna(0, inplace=True) #filling the missing values if any
+churn['total_churned'] = churn['total_churned'].astype(int)
+churn.info()
+
+
+
+
+import datetime as dt
+
+def get_customers(yearmonth):
+    year = yearmonth//100
+    month = yearmonth-year*100
+    date = dt.datetime(year, month, 1)
+    return ((subs['start_date'] < date) & (date <= subs['end_date'])).sum()
+
+churn['total_customers'] = churn['yearmonth'].apply(get_customers)
+# churn.head()
+churn['churn_rate'] = churn['total_churned'] / churn['total_customers']
+# churn.head()
+churn['yearmonth'] = churn['yearmonth'].astype(str)
+
+
+arange = __import__("numpy").arange
+Ellipse = __import__("matplotlib").patches.Ellipse
+ax = churn.plot(x="yearmonth", y="churn_rate", figsize=(12,6), rot=45, marker=".")
+start, end = ax.get_xlim()
+ax.get_xticks()
+ax.set_xticks(arange(2, end, 3))
+ax.set_xticklabels(yearmonths[2::3])
+circle = Ellipse((35, churn.loc[churn.yearmonth == "201312", "churn_rate"].iloc[0]),
+                 5, 0.065, color='sandybrown', fill=False
+                   )
+ax.add_artist(circle)
+ax.xaxis.label.set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.get_legend().remove()

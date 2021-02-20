@@ -1,0 +1,56 @@
+wnba['Pts_per_game'] = wnba['PTS'] / wnba['Games Played']
+# Stratifying
+stratum_G = wnba[wnba['Pos'] == 'G']
+stratum_F = wnba[wnba['Pos'] == 'F']
+stratum_C = wnba[wnba['Pos'] == 'C']
+stratum_FC = wnba[wnba['Pos'] == 'F/C']
+stratum_GF = wnba[wnba['Pos'] == 'G/F']
+
+points_per_position = {}
+#simple ramdom sampling on each strata
+for stratum,position in [(stratum_G, 'G'), (stratum_F, 'F'), (stratum_C, 'C'), (stratum_FC, 'F/C'), (stratum_GF, 'G/F')]:
+    sample = stratum['Pts_per_game'].sample(10, random_state=0)
+    points_per_position[position] = sample.mean()
+
+# print(points_per_position)
+
+position_most_points = max(points_per_position, key=points_per_position.get) #max function on dictionary to find out the max
+
+
+
+# stratifying based on games played
+under_12 = wnba[wnba['Games Played'] <= 12]
+btw_13_22 = wnba[(wnba['Games Played'] >12) & (wnba['Games Played'] <=22)]
+over_23 = wnba[wnba['Games Played'] > 22]
+
+stratified = []
+# taking 1 sample from the first, 2 from second and 7 from the third sample
+# and then tthen concatenating them into one
+for i in range(100):
+    sample_under_12 = under_12['PTS'].sample(1, random_state=i)
+    sample_btw_13_22 = btw_13_22['PTS'].sample(2, random_state=i)
+    sample_over_23 = over_23['PTS'].sample(7, random_state=i)
+
+    final_sample = pd.concat([sample_under_12, sample_btw_13_22, sample_over_23])
+    stratified.append(final_sample.mean())
+
+plt.scatter(range(1,101), stratified)
+plt.axhline(wnba['PTS'].mean())
+
+
+
+1. Minimize the variability within each stratum.
+For instance, avoid having in the same stratum a player that has scored 10 points and a player that has scored 500. If the variability is high,
+it might be a sign that you either need a more granular stratification (need more strata), or you need to change the criterion of stratification
+(an example of criterion is minutes played).
+
+2. Maximize the variability between strata.
+Good strata are different from one another. If you have strata that are similar to one another with respect to what you want to measure, you might need a more
+granular stratification, or to change the stratification criterion. In the previous screen, stratifying the data by games played resulted in strata that weren't too
+different from each other with respect to the distribution of the total points. We managed to increase the variability between strata by changing the criterion of
+stratification to minutes played.
+
+3. The stratification criterion should be strongly correlated with the property you're trying to measure.
+For instance, the column describing minutes played (the criterion) should be strongly correlated with the number of total points (property we want to measure).
+We've covered briefly the concept of correlation in the pandas courses, and we'll cover it again later in these statistics courses, so don't worry if the concept of
+correlation doesn't make much sense to you now.
