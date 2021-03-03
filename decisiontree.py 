@@ -1,0 +1,5 @@
+import pandas
+
+# Set index_col to False to avoid pandas thinking that the first column is row indexes (it's age)
+income = pandas.read_csv("income.csv", index_col=False)
+print(income.head(5))

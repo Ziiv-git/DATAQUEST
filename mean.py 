@@ -1,0 +1,130 @@
+parameter = houses['SalePrice'].mean()
+sample_size = 5
+sample_sizes = []
+sampling_errors = []
+
+for i in range(0,101):
+    sample = houses['SalePrice'].sample(sample_size, random_state=i)
+    statistic = sample.mean()
+    error = parameter - statistic
+    sampling_errors.append(error)
+    sample_sizes.append(sample_size)
+    sample_size += 29
+print(sampling_errors)
+
+import matplotlib.pyplot as plt
+plt.scatter(sample_sizes, sampling_errors)
+plt.axhline(0)
+plt.axvline(2930)
+plt.xlabel('Sample size')
+plt.ylabel('Sampling error')
+plt.show()
+
+
+
+
+from numpy import average
+weighted_mean_numpy = average(houses_per_year['Mean Price'], weights= houses_per_year['Houses Sold'])
+
+
+h = houses['TotRms AbvGrd'].str.replace(' or more', '').astype(int).sort_values().copy()
+
+middle_indices = [int((len(h) / 2) -1), int((len(h) / 2))] # len - 1 and len because Series use 0-indexing
+middle_values = h.iloc[middle_indices]
+median = middle_values.mean()
+
+
+
+
+def mode_func(array):
+    counts = {}
+    for i in array:
+        if i in counts:
+            counts[i] += 1
+        else:
+            counts[i] = 1
+    return max(counts, key=counts.get)
+
+
+
+    intervals = pd.interval_range(start = 0, end = 800000, freq = 100000)
+    gr_freq_table = pd.Series([0,0,0,0,0,0,0,0], index = intervals)
+
+    for value in houses['SalePrice']:
+        for interval in intervals:
+            if value in interval:
+                gr_freq_table.loc[interval] += 1
+                break
+
+
+  def range_func(array):
+    return max(array) - min(array)
+
+              range_by_year = {}
+              for year in houses['Yr Sold'].unique():
+                  data_by_year = houses[houses['Yr Sold'] == year]
+                  range_by_year[year] = range_func(data_by_year['SalePrice'])
+
+
+
+
+
+
+def standard_deviation(array):
+    reference_point = sum(array) / len(array)
+
+    distances = []
+    for value in array:
+        squared_distance = (value - reference_point)**2
+        distances.append(squared_distance)
+
+    variance = sum(distances) / len(distances)
+
+    return sqrt(variance)
+# Measure first the variability for each year
+years = {}
+
+for year in houses['Yr Sold'].unique():
+    year_segment = houses[houses['Yr Sold'] == year]
+    st_dev = standard_deviation(year_segment['SalePrice'])
+    years[year] = st_dev
+
+# Get years of max and min variability
+greatest_variability = max(years, key = years.get) # outputs directly the year with the maximum variability
+lowest_variability = min(years, key = years.get) # outputs directly the year with the minimum variability
+
+
+
+
+
+
+
+def z_score(value, array, bessel = 0):
+    mean = sum(array) / len(array)
+
+    from numpy import std
+    st_dev = std(array, ddof = bessel)
+
+    distance = value - mean
+    z = distance / st_dev
+
+    return z
+
+north_ames = houses[houses['Neighborhood'] == 'NAmes']
+
+college_creek = houses[houses['Neighborhood'] == 'CollgCr']
+
+old_town = houses[houses['Neighborhood'] == 'OldTown']
+
+edwards = houses[houses['Neighborhood'] == 'Edwards']
+
+somerset = houses[houses['Neighborhood'] == 'Somerst']
+
+z_by_location = {}
+
+for data,neighborhood in [(north_ames, 'NAmes'), (college_creek, 'clg_creek'), (old_town, 'OldTown'), (edwards, 'Edwards'), (somerset, 'Somerst')]:
+    z_by_location[neighborhood] = z_score(200000, data['SalePrice'])
+
+print(z_by_location)
+
+best_investment = 'College Creek'

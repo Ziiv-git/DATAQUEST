@@ -1,0 +1,51 @@
+import numpy as np
+our_acc_value = 3
+first_living_space_value = dc_listings.iloc[0]['accommodates']
+first_distance = np.abs(first_living_space_value - our_acc_value)
+print(first_distance)
+
+
+
+
+our_acc_value = 3
+dc_listings['distance'] = dc_listings['accommodates'].apply(lambda x: np.abs(x - our_acc_value))
+print(dc_listings['distance'].value_counts())
+
+
+
+#Randomize the order of the rows in dc_listings:
+#Use the np.random.permutation() function to return a NumPy array of shuffled index values.
+#Use the Dataframe method loc[] to return a new Dataframe containing the shuffled order.
+#Assign the new Dataframe back to dc_listings.
+import numpy as np
+np.random.seed(1)
+dc_listings = dc_listings.loc[np.random.permutation(len(dc_listings))]
+dc_listings = dc_listings.sort_values('distance')
+print(dc_listings.iloc[0:10]['price'])
+
+
+
+
+
+# Brought along the changes we made to the `dc_listings` Dataframe.
+dc_listings = pd.read_csv('dc_airbnb.csv')
+stripped_commas = dc_listings['price'].str.replace(',', '')
+stripped_dollars = stripped_commas.str.replace('$', '')
+dc_listings['price'] = stripped_dollars.astype('float')
+dc_listings = dc_listings.loc[np.random.permutation(len(dc_listings))]
+train_df = dc_listings.iloc[0:2792]
+test_df = dc_listings.iloc[2792:]
+
+def predict_price(new_listing):
+    ## DataFrame.copy() performs a deep copy
+    temp_df = train_df.copy()
+    temp_df['distance'] = temp_df['accommodates'].apply(lambda x: np.abs(x - new_listing))
+    temp_df = temp_df.sort_values('distance')
+    nearest_neighbor_prices = temp_df.iloc[0:5]['price']
+    predicted_price = nearest_neighbor_prices.mean()
+    return(predicted_price)
+
+test_df['predicted_price'] = test_df['accommodates'].apply(predict_price)
+
+test_df['error'] = np.abs(test_df['predicted_price'] - test_df['price'])
+mae = test_df['error'].mean()
